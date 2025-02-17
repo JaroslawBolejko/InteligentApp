@@ -1,0 +1,19 @@
+﻿@page "/hello"
+
+<h3>Witaj @userName</h3>
+<p>To jest pierwszy testowy komponent w szkoleniu -> Szkoła AI</p>
+
+<div style="display: flex; align-items: center;">
+    <InputNumber @bind-Value="firstNumber" style="margin-right: 10px;" />
+    <span style="margin-right: 10px;">+</span>
+    <InputNumber @bind-Value="secondNumber" style="margin-right: 10px;" />
+    <p style="margin: 0;">= @result</p>
+</div>
+
+@code {
+    private string userName = "Jarosław Bolejko";
+    private int firstNumber;
+    private int secondNumber;
+
+    private int result => firstNumber + secondNumber;
+}
