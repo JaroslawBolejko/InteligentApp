@@ -1,0 +1,42 @@
+﻿@page "/AboutUser"
+@inject IMovieService MovieService
+
+<h3 class="header">About @User.NAME</h3>
+
+<div>
+    <h4>Favorite movies:</h4>
+    @if (Movies != null || Movies.Any())
+    {
+        <ol class="movies">
+            @foreach (var movie in Movies)
+            {
+                <li>@movie.Title (@movie.Year) - @movie.Genre</li>
+            }
+        </ol>
+    }
+    else
+    {
+        <p>There are no movies that @User.NAME like or something went wrong druing parsing csv file.</p>
+    }
+</div>
+
+<style>
+    .movies{
+    color: blue;
+    font-weight: bold;
+    }
+
+    .header{
+        text-align: center;
+    }
+</style>
+
+@code {
+    private List<Movie> Movies = new();
+
+    protected override void OnInitialized()
+    {
+        Movies = MovieService.GetMovies();
+    }
+
+}
