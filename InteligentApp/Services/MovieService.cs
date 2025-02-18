@@ -1,4 +1,4 @@
-﻿using InteligentApp.Components.Data;
+﻿using InteligentApp.Components.Models;
 
 namespace InteligentApp.Services
 {

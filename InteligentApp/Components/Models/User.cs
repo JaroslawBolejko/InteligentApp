@@ -1,4 +1,4 @@
-﻿namespace InteligentApp.Components.Utils
+﻿namespace InteligentApp.Components.Models
 {
     public static class User
     {

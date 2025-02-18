@@ -1,4 +1,4 @@
-﻿namespace InteligentApp.Components.Data
+﻿namespace InteligentApp.Components.Models
 {
     public class Movie
     {
