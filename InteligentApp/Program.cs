@@ -1,4 +1,5 @@
 using InteligentApp.Components;
+using InteligentApp.Services;
 
 namespace InteligentApp
 {
@@ -11,6 +12,8 @@ namespace InteligentApp
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+            builder.Services.AddSingleton<IMovieService, MovieService>();
+
 
             var app = builder.Build();
 
