@@ -1,5 +1,7 @@
 using InteligentApp.Components;
 using InteligentApp.Services;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Net.Http.Headers;
 
 namespace InteligentApp
 {
@@ -8,6 +10,24 @@ namespace InteligentApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            var openAiApiKey = builder.Configuration["OpenAI:ApiKey"];
+            var openAiApiEndpoint = builder.Configuration["OpenAI:ApiEndpoint"];
+
+            var azureAiApiKey = builder.Configuration["AzureAI:ApiKey"];
+            var azureAiApiEndpoint = builder.Configuration["AzureAI:ApiEndpoint"];
+
+            builder.Services.AddHttpClient("OpenAI", client =>
+            {
+                client.BaseAddress = new Uri(openAiApiEndpoint);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiApiKey);
+            });
+
+            builder.Services.AddHttpClient("AzureAI", client =>
+            {
+                client.BaseAddress = new Uri(azureAiApiEndpoint);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Ocp-Apim-Subscription-Key", azureAiApiKey);
+            });
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
