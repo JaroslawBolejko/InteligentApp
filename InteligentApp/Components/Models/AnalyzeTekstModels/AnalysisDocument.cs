@@ -1,0 +1,16 @@
+﻿using System.Text.Json.Serialization;
+
+namespace InteligentApp.Components.Models.AnalyzeTekstModels
+{
+    public class AnalysisDocument
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("language")]
+        public string Language { get; set; }
+
+        [JsonPropertyName("text")]
+        public string Text { get; set; }
+    }
+}

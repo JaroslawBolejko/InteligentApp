@@ -1,0 +1,136 @@
+﻿@page "/tekst-analysis"
+@using InteligentApp.Components.Models.AnalyzeTekstModels
+@using System.Text.Json
+
+<!--
+    TekstAnalysis.razor
+    Blazor component for Azure AI sentiment and key phrase analysis.
+-->
+
+<h3>Analiza tekstu z podziałem na sentyment i kluczowe frazy</h3>
+
+<p>
+    Wprowadź tekst, który zostanie przeanalizowany. Analiza będzie dotyczyć jego sentymentu.
+    Wyodrębnione zostaną kluczowe frazy za pomocą Azure Ai Services
+</p>
+
+<div class="mb-3">
+    <label for="textInput" class="form-label">Tekst do analizy:</label>
+    <textarea id="textInput" class="form-control" rows="3" @bind="_textInput"></textarea>
+</div>
+
+<button class="btn btn-primary" @onclick="AnalyzeTextAsync">Analizuj tekst</button>
+
+@if (_isLoading)
+{
+    <p class="mt-3">Proszę poczekać, analizuję tekst...</p>
+}
+else if (_showResult)
+{
+    <div>
+        <h4>Wynik analizy:</h4>
+        <p><strong>Sentyment:</strong> @_sentimentResult</p>
+        <p><strong>Kluczowe frazy:</strong></p>
+        <ul>
+            @foreach (var phrase in _keyPhrases)
+            {
+                <li>@phrase</li>
+            }
+        </ul>
+    </div>
+}
+
+@code {
+    private string _textInput = string.Empty;
+    private bool _isLoading = false;
+    private bool _showResult = false;
+    private string _sentimentResult = string.Empty;
+    private List<string> _keyPhrases = new();
+
+    [Inject]
+    public IHttpClientFactory HttpClientFactory { get; set; }
+
+    /// <summary>
+    /// Main entry point for text analysis. Handles UI state and calls analysis methods.
+    /// </summary>
+    private async Task AnalyzeTextAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_textInput))
+        {
+            _sentimentResult = "Proszę wprowadzić tekst do analizy.";
+            _showResult = true;
+            return;
+        }
+
+        _isLoading = true;
+        _showResult = false;
+        _keyPhrases.Clear();
+        _sentimentResult = string.Empty;
+
+        var sentiment = await AnalyzeTextApiAsync(_textInput, "SentimentAnalysis");
+        var keyPhrases = await AnalyzeTextApiAsync(_textInput, "KeyPhraseExtraction");
+
+        _sentimentResult = sentiment.Sentiment ?? "Brak wyniku sentymentu.";
+        _keyPhrases = keyPhrases.KeyPhrases ?? new List<string>();
+        _isLoading = false;
+        _showResult = true;
+    }
+
+    /// <summary>
+    /// Calls Azure AI API for the specified analysis kind.
+    /// </summary>
+    /// <param name="userInput">Text to analyze.</param>
+    /// <param name="kind">Analysis kind ("SentimentAnalysis", "KeyPhraseExtraction", etc.).</param>
+    /// <returns>AnalyzeTextDocument with results.</returns>
+    private async Task<AnalyzeTextDocument> AnalyzeTextApiAsync(string userInput, string kind)
+    {
+        try
+        {
+            var requestBody = BuildAnalyzeTextRequest(userInput, kind);
+            var client = HttpClientFactory.CreateClient("AzureAI");
+            var endpoint = "language/:analyze-text?api-version=2024-11-01";
+
+            var response = await client.PostAsJsonAsync(endpoint, requestBody);
+            response.EnsureSuccessStatusCode();
+
+            var responseResult = await response.Content.ReadAsStringAsync();
+            var analysisResponse = JsonSerializer.Deserialize<AnalyzeTextResponse>(responseResult);
+            return analysisResponse?.Results?.Documents?.FirstOrDefault() ?? new AnalyzeTextDocument();
+        }
+        catch (Exception ex)
+        {
+            // Return error info in a document for display
+            if (kind == "SentimentAnalysis")
+                return new AnalyzeTextDocument { Sentiment = $"Błąd podczas analizy sentymentu: {ex.Message}" };
+            if (kind == "KeyPhraseExtraction")
+                return new AnalyzeTextDocument { KeyPhrases = new List<string> { $"Wystąpił błąd podczas ekstrakcji kluczowych fraz: {ex.Message}" } };
+            return new AnalyzeTextDocument();
+        }
+    }
+
+    /// <summary>
+    /// Builds the request object for Azure AI text analysis.
+    /// </summary>
+    /// <param name="userInput">Text to analyze.</param>
+    /// <param name="kind">Analysis kind.</param>
+    /// <returns>AnalyzeTextRequest object.</returns>
+    private AnalyzeTextRequest BuildAnalyzeTextRequest(string userInput, string kind)
+    {
+        return new AnalyzeTextRequest
+        {
+            Kind = kind,
+            AnalysisInput = new AnalysisInput
+            {
+                Documents = new List<AnalysisDocument>
+                {
+                    new AnalysisDocument { Id = "1", Language = "pl", Text = userInput }
+                }
+            },
+            Parameters = new Dictionary<string, object>
+            {
+                { "modelVersion", "latest" },
+                { "loggingOptOut", false }
+            }
+        };
+    }
+}

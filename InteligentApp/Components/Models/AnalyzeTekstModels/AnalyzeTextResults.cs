@@ -1,0 +1,17 @@
+﻿using System.Security.Principal;
+using System.Text.Json.Serialization;
+
+namespace InteligentApp.Components.Models.AnalyzeTekstModels
+{
+    public class AnalyzeTextResults
+    {
+        [JsonPropertyName("documents")]
+        public List<AnalyzeTextDocument> Documents { get; set; }
+
+        [JsonPropertyName("errors")]
+        public List<AnalyzeTextError> Errors { get; set; }
+
+        [JsonPropertyName("modelVersion")]
+        public string ModelVersion { get; set; }
+    }
+}
