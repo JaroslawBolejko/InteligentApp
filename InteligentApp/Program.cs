@@ -1,6 +1,5 @@
 using InteligentApp.Components;
 using InteligentApp.Services;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using System.Net.Http.Headers;
 
 namespace InteligentApp
@@ -26,7 +25,7 @@ namespace InteligentApp
             builder.Services.AddHttpClient("AzureAI", client =>
             {
                 client.BaseAddress = new Uri(azureAiApiEndpoint);
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Ocp-Apim-Subscription-Key", azureAiApiKey);
+                client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", azureAiApiKey);
             });
 
             // Add services to the container.
