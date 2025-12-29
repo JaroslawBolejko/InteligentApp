@@ -1,0 +1,131 @@
+﻿@page "/advanced-text-generation"
+
+<h3>Zaawansowane generowanie tekstu</h3>
+
+<p>Wybierz tryb generowania tekstu:</p>
+
+<div class="mb-3">
+    <select class="form-select" @bind="_selectedMode">
+        <option value="normal">Normalne Generowanie</option>
+        <option value="summary">Streszczenie</option>
+        <option value="qa">Q&A</option>
+        <option value="creative">Kreatywny</option>
+        <option value="formal">Formalny</option>
+        <option value="concise">Zwięzły</option>
+    </select>
+</div>
+
+@switch (_selectedMode)
+{
+    case "normal":
+        <p>W trybie normalnym podaj prompt</p>
+        <div class="mb-3">
+            <label class="form-label">Prompt:</label>
+            <textarea class="form-control" rows="4" @bind="_userPrompt"></textarea>
+        </div>
+        break;
+
+    case "summary":
+        <p>W trybie streszczenia podaj tekst do streszczenia</p>
+        <div class="mb-3">
+            <label class="form-label">Tekst do streszczenia:</label>
+            <textarea class="form-control" rows="6" @bind="_baseText"></textarea>
+        </div>
+        break;
+
+    case "qa":
+        <p>W trybie Q&A podaj tekst do analizy oraz zadaj pytanie</p>
+        <div class="mb-3">
+            <label class="form-label">Tekst do analizy:</label>
+            <textarea class="form-control" rows="6" @bind="_baseText"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Pytanie:</label>
+            <textarea class="form-control" rows="3" @bind="_userPrompt"></textarea>
+        </div>
+        break;
+
+    case "creative":
+        <p>W trybie kreatywnym podaj temat</p>
+        <div class="mb-3">
+            <label class="form-label">Temat:</label>
+            <textarea class="form-control" rows="4" @bind="_userPrompt"></textarea>
+        </div>
+        break;
+
+    case "formal":
+        <p>W trybie formalnym podaj treść do sformalizowania</p>
+        <div class="mb-3">
+            <label class="form-label">Treść:</label>
+            <textarea class="form-control" rows="5" @bind="_baseText"></textarea>
+        </div>
+        break;
+
+    case "concise":
+        <p>W trybie zwięzłym podaj tekst do skrócenia</p>
+        <div class="mb-3">
+            <label class="form-label">Tekst:</label>
+            <textarea class="form-control" rows="5" @bind="_baseText"></textarea>
+        </div>
+        break;
+
+}
+<button class="btn btn-primary" disabled="@_isLoading" @onclick="GenerateText">Generuj</button>
+
+@if (_isLoading)
+{
+    <p class="mt-3">Proszę czekać, generuję tekst...</p>
+}
+else if (_showResult)
+{
+    <h4 class="mt-3">Wynik:</h4>
+    <p>@_generatedText</p>
+}
+
+@code {
+    private string _selectedMode = "normal";
+    private string _userPrompt = string.Empty;
+    private string _baseText = string.Empty;
+    private string _generatedText = string.Empty;
+    private bool _isLoading = false;
+    private bool _showResult = false;
+    [Inject]
+    private IOpenAiService OpenAiService { get; set; } = default!;
+
+    private async Task GenerateText()
+    {
+        _isLoading = true;
+        _showResult = false;
+        _generatedText = string.Empty;
+
+        var prompt = PreparePrompt();
+        try
+        {
+            _generatedText = await OpenAiService.GenerateTextAsync(prompt, false);
+            _showResult = true;
+        }
+        catch (Exception ex)
+        {
+            _generatedText = $"Wystąpił błąd podczas generowania tekstu: {ex.Message}";
+            _showResult = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string PreparePrompt()
+    {
+        return _selectedMode switch
+        {
+            "normal" => _userPrompt,
+            "summary" => $"Streszcz następujący tekst: \n\n{_baseText}",
+            "qa" => $"Na podstawie następującego tekstu: \n\n{_baseText} \n\nOdpowiedz na pytanie: {_userPrompt}",
+            "creative" => $"Napisz kreatywny tekst na temat: {_userPrompt}",
+            "formal" => $"Sformalizuj następującą treść: {_baseText}",
+            "concise" => $"Skróć następujący tekst: {_baseText}",
+            _ => _userPrompt,
+        };
+    }
+}

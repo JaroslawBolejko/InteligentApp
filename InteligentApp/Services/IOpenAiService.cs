@@ -5,7 +5,7 @@ namespace InteligentApp.Services
 {
     public interface IOpenAiService
     {
-       Task<string> GenerateTextAsync(string userPrompt);
+        Task<string> GenerateTextAsync(string userPrompt, bool includeSystemMessage = true);
     }
 
     public class OpenAiService : IOpenAiService
@@ -21,21 +21,27 @@ namespace InteligentApp.Services
         /// Sends a prompt to OpenAI and returns the response.
         /// </summary>
         /// <param name="userPrompt">Prompt to send.</param>
+        /// <param name="includeSystemMessage">Whether to include the default system message.</param>
         /// <returns>Response text from OpenAI.</returns>
-        public async Task<string> GenerateTextAsync(string userPrompt)
+        public async Task<string> GenerateTextAsync(string userPrompt, bool includeSystemMessage = true)
         {
             try
             {
                 var client = _httpClientFactory.CreateClient("OpenAI");
 
+                var messages = new List<object>();
+                
+                if (includeSystemMessage)
+                {
+                    messages.Add(new { role = "system", content = "Jesteś pomocnym asystentem." });
+                }
+                
+                messages.Add(new { role = "user", content = userPrompt });
+
                 var requestBody = new
                 {
                     model = "gpt-4",
-                    messages = new[]
-                    {
-                    new { role = "system", content = "Jesteś pomocnym asystentem." },
-                    new { role = "user", content = userPrompt }
-                },
+                    messages = messages.ToArray(),
                     max_tokens = 500,
                     temperature = 0.7
                 };
