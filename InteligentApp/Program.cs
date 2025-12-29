@@ -32,6 +32,8 @@ namespace InteligentApp
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
             builder.Services.AddSingleton<IMovieService, MovieService>();
+            builder.Services.AddScoped<IOpenAiService, OpenAiService>();
+            builder.Services.AddScoped<IAzureLanguageService, AzureLanguageService>();
 
 
             var app = builder.Build();
